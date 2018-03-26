@@ -46,13 +46,14 @@ Checks whether or not a certain artifact (typically cover.jpg) is not present in
 
 ### fix_artifacts.py
 
-Checks for all artifacts of a provided filetype, and ensures that they match the "$artist - $album" format:
+Checks for all artifacts of a provided filetype (or directories if `--ext=dir`), and ensures that they match the "$artist - $album" format:
 
 * Retrieves a list of all paths to albums in the music library
-* Checks for the presence of the artifact in each album path, printing the path if it is detected
+* Checks for the presence of the artifact recursively in each album path, printing the path if it is detected
     * If a dryrun, indicate that it found a matching file, and end processing
 * Renames the artifact to "$artist - $album" format
     * If `--delete` specified, deletes the artifact instead
+    * If `--move` specified, moves artifact to directory specified in `--movedir`
 * Exits with 0 if not a dry run, or no matching files, 1 if a dry run with matched files
 
 The only exception is if it is checking jpg artifacts, in which `cover.jpg` will always be skipped.
@@ -88,6 +89,7 @@ Copies any missing `cover.jpg` files over to the converted directory, and option
 | IMPORT_DIR | ~/media/Music/Import | Path for beets to import music from |
 | LIBRARY_DIR | ~/media/Music/FLAC | Path to the library folder that beets manages |
 | CONVERTED_DIR | ~/media/Music/V2 | Path to the converted music folder that beets manages |
+| ARTIFACT_DIR | ~/media/Misc/Artifacts | Path to move artifacts to |
 | BEETS_DB | ~/.config/beets/library.db | Path to the SQLite database beets maintains |
 | BEETS_SUBDIR | FLAC | Subdirectory of the base Music folder that is in the beets database, e.g. FLAC if the library folder is ~/media/Music/FLAC |
 | LIBRARY_SUBDIR | FLAC | Subdirectory of the base Music folder that beets manages, e.g. FLAC if the library folder is ~/media/Music/FLAC |
@@ -104,10 +106,11 @@ Currently, the script provides the following "steps":
 | audit_beets_music | Checks for music in the beets database not present in the library folder |
 | audit_library_music | Checks for music in the library folder not present in the beets database |
 | audit_music_covers | Checks for albums that do not have cover.jpg files present |
-| fix_library | Runs fix_cue_artifacts, fix_log_artifacts, and fix_jpg_artifacts |
+| fix_library | Runs fix_cue_artifacts, fix_log_artifacts, fix_jpg_artifacts, and fix_dir_artifacts |
 | fix_log_artifacts | Checks for log artifacts and corrects them if necessary |
 | fix_cue_artifacts | Checks for cue artifacts and corrects them if necessary |
-| fix_jpg_artifacts | Checks for jpg artifacts other than `cover.jpg` and deletes them if necessary |
+| fix_jpg_artifacts | Checks for jpg artifacts other than `cover.jpg` and moves them if necessary |
+| fix_dir_artifacts | Checks for dir artifacts and deletes them if necessary |
 | convert_library | Converts all music in the beets database, storing output in ./convert.log |
 | audit_converted | Runs audit_converted_music |
 | audit_converted_music | Checks for music in the beets database not present in the converted folder |

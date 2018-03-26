@@ -4,6 +4,7 @@ PYTHON_BIN=${PYTHON_BIN:-python3}
 IMPORT_DIR=${IMPORT_DIR:-~/media/Music/Import}
 LIBRARY_DIR=${LIBRARY_DIR:-~/media/Music/FLAC}
 CONVERTED_DIR=${CONVERTED_DIR:-~/media/Music/V2}
+ARTIFACT_DIR=${ARTIFACT_DIR:-~/media/Misc/Artifacts}
 BEETS_DB=${BEETS_DB:-~/.config/beets/library.db}
 BEETS_SUBDIR=${BEETS_SUBDIR:-FLAC}
 LIBRARY_SUBDIR=${LIBRARY_SUBDIR:-FLAC}
@@ -102,8 +103,11 @@ fix_library() {
 	echo "Fixing log artifacts"
 	fix_log_artifacts
 
-	echo "Deleting jpg artifacts"
+	echo "Moving jpg artifacts"
 	fix_jpg_artifacts
+
+	echo "Deleting dir artifacts"
+	fix_dir_artifacts
 }
 
 fix_log_artifacts() {
@@ -171,15 +175,45 @@ fix_jpg_artifacts() {
 			--dryrun
 
 		if [[ $? == '1' ]]; then
-			echo -e "\nThe above jpgs will be DELETED, press any key to continue"
+			echo -e "\nThe above jpgs will be moved, press any key to continue"
 			read < /dev/tty
 		fi
 	fi
 
-	echo "Deleting jpg artifacts in $LIBRARY_DIR"
+	echo "Moving jpg artifacts in $LIBRARY_DIR"
 	$PYTHON_BIN fix_artifacts.py \
 		--dir="$LIBRARY_DIR" \
 		--ext="jpg" \
+		--move \
+		--movedir="$ARTIFACT_DIR"
+	
+	RESULT=$?
+
+	if [[ $INTERACTIVE == 'false' ]]; then
+		exit $RESULT
+	else
+		return $RESULT
+	fi
+}
+
+fix_dir_artifacts() {
+	if [[ $INTERACTIVE == 'true' ]]; then
+		echo -e "Listing dir artifacts in $LIBRARY_DIR \n"
+		$PYTHON_BIN fix_artifacts.py \
+			--dir="$LIBRARY_DIR" \
+			--ext="dir" \
+			--dryrun
+
+		if [[ $? == '1' ]]; then
+			echo -e "\nThe above dirs will be DELETED, press any key to continue"
+			read < /dev/tty
+		fi
+	fi
+
+	echo "Deleting dir artifacts in $LIBRARY_DIR"
+	$PYTHON_BIN fix_artifacts.py \
+		--dir="$LIBRARY_DIR" \
+		--ext="dir" \
 		--delete
 	
 	RESULT=$?

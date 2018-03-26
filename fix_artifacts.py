@@ -6,6 +6,8 @@
 # USAGE:
 # --dir - Directory to search, in beets format
 # --ext - File extension of artifacts to search for, jpg will skip cover.jpg
+# --move - Move the matched artifacts to a specified movedir
+# --movedir - The directory to move matched artifacts to
 # --delete - Delete the artifacts instead of correcting them
 # --dryrun - List the nonstandard artifacts without correction
 # EXAMPLE:
@@ -15,9 +17,11 @@
 # python3 fix_artifacts.py --dir=~/media/Music/FLAC --ext=jpg --delete
 import argparse,os,beetutils
 
-def main(library_dir, artifact_extension, delete, dry_run):
+def main(library_dir, artifact_extension, delete, dry_run, move, move_dir):
     # Extension
     library_dir = os.path.expanduser(library_dir)
+    if move:
+        move_dir = os.path.expanduser(move_dir)
 
     library_albums = beetutils.get_library_albums(library_dir)
 
@@ -30,30 +34,41 @@ def main(library_dir, artifact_extension, delete, dry_run):
 
         # Retrieve artifacts in this album's folder and go through them
         for artifact in beetutils.get_folder_artifacts(library_album, artifact_extension):
+            # Extract only the filename itself
+            artifact_base = os.path.basename(artifact)
+            
             # Skip the artifact if it is just cover.jpg
-            if os.path.basename(artifact) == "cover.jpg":
+            if artifact_base == "cover.jpg":
                 continue
             
             # Retrieve the name of the file without the extension, test.jpg becomes test
-            artifact_album = os.path.splitext(artifact)[0]
+            artifact_album = os.path.splitext(artifact_base)[0]
 
             # If the name of the file does not match the album name, act on it
             if artifact_album != album_name:
                 # Create the full path to the artifact and print it
-                artifact_path = os.path.join(library_album, artifact)
-                print(artifact_path)
+                print(artifact)
 
                 # If this is not a dry run, act on it
                 if not dry_run:
-                    if delete:
-                        # Delete the artifact, unless it is a directory
-                        os.remove(artifact_path, dir_fd=None)
+                    if move:
+                        # Form a new path composed of the Album Name and the artifact's original filename
+                        new_path = os.path.join(move_dir, "%s - %s" % (album_name, artifact_base))
+                        # Move the artifact
+                        os.rename(artifact, new_path)
+                    elif delete:
+                        if artifact_extension == "dir":
+                            # Delete the directory
+                            os.removedirs(artifact)
+                        else:
+                            # Delete the artifact, unless it is a directory
+                            os.remove(artifact, dir_fd=None)
                     else:
                         # Create the "corrected" filename and path "$artist - $album.$extension"
                         fixed_path = os.path.join(library_album, "%s.%s" % (album_name, artifact_extension))
                         
                         # Perform the correction rename
-                        os.rename(artifact_path, fixed_path)
+                        os.rename(artifact, fixed_path)
                 else:
                     audit_result = False
     
@@ -85,8 +100,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--dir", nargs="?", default="~/media/Music/FLAC", help="Location of the beets music library files")
     parser.add_argument("--ext", nargs="?", default="cue", help="The extension of the artifact to fix")
+    parser.add_argument("--move", type=string_to_boolean, nargs="?", const=True, default="no", help="Move the artifact to a specified folder instead of renaming it")
+    parser.add_argument("--movedir", nargs="?", default="~/media/Music/Misc/Artifacts", help="Directory to move artifacts to, if --move specified")
     parser.add_argument("--delete", type=string_to_boolean, nargs="?", const=True, default="no", help="Delete the artifact instead of renaming it (DANGEROUS)")
     parser.add_argument("--dryrun", type=string_to_boolean, nargs="?", const=True, default="no", help="Dry run, don't modify artifacts")
     args = parser.parse_args()
 
-    exit(main(args.dir, args.ext, args.delete, args.dryrun))
+    exit(main(args.dir, args.ext, args.delete, args.dryrun, args.move, args.movedir))

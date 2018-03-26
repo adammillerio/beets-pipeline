@@ -33,13 +33,24 @@ def get_folder_artifacts(folder, artifact_extension):
 
     Args:
         folder: Folder to list artifacts for
-        artifact_extension: Extension to match artifacts for
+        artifact_extension: Extension to match artifacts for, or "dir" if listing directories
     
     Returns:
-        An array of all artifact files that match an extension, without the full path
+        An array of all artifact file paths that match an extension
     """
 
-    return fnmatch.filter(os.listdir(folder), "*.%s" % artifact_extension)
+    artifacts = []
+
+    if artifact_extension == "dir":
+        for root, dirs, files in os.walk(folder):
+            for directory in dirs:
+                artifacts.append(os.path.join(root, directory))
+    else:
+        for root, dirs, files in os.walk(folder):
+            for artifact in fnmatch.filter(files, "*.%s" % artifact_extension):
+                artifacts.append(os.path.join(root, artifact))
+
+    return artifacts
 
 def get_beets_songs(db, extension="flac"):
     """
