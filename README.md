@@ -106,7 +106,7 @@ Currently, the script provides the following "steps":
 | fix_library | Runs fix_cue_artifacts, fix_log_artifacts, and fix_jpg_artifacts |
 | fix_log_artifacts | Checks for log artifacts and corrects them if necessary |
 | fix_cue_artifacts | Checks for cue artifacts and corrects them if necessary |
-| fix_jpg_artifacts | Checks for jpg artifacts other than `cover.jpg and deletes them if necessary |
+| fix_jpg_artifacts | Checks for jpg artifacts other than `cover.jpg` and deletes them if necessary |
 | convert_library | Converts all music in the beets database, storing output in ./convert.log |
 | audit_converted | Runs audit_converted_music |
 | audit_converted_music | Checks for music in the beets database not present in the converted folder |
