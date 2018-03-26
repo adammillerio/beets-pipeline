@@ -96,6 +96,7 @@ Copies any missing `cover.jpg` files over to the converted directory, and option
 | INTERACTIVE | true | Whether or not script is being ran interactively, if set to false, it will never pause for user input |
 
 Currently, the script provides the following "steps":
+
 | Step | Description |
 |---|---|
 | import_library | Imports all files currently in the import directory |
