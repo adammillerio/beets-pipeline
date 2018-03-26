@@ -1,0 +1,67 @@
+# Enabled plugins
+plugins: discogs beatport lyrics lastgenre copyartifacts inline zero convert
+directory: ~/media/Music/FLAC           # Location where music is stored, in "./$artist/$artist - $album" format
+library: ~/.config/beets/library.db     # Location where the beets database is stored
+log: ~/.config/beets/importer.log       # Location where the import process will write it's logs
+art_filename: cover                     # Rename all album art files to cover, e.g., cover.jpg/cover.png
+original_date: yes                      # Write the original date of the album instead of the date of the current release e.g. write 1992 even if it is a 2002 re-release
+per_disc_numbering: yes                 # First track of a subsequent disc will always be 1 instead of N+1 where N is the last track of previous disc
+# Importer configuration
+import:
+  write: yes                            # Write metadata to files as ID3 tags
+  copy: no                              # Don't copy files into the library
+  move: yes                             # Move files into the library
+  resume: ask                           # Ask before resuming interrupted import
+  timid: yes                            # Timid mode: Ask for confirmation on every tag match
+# Path format configuration, reference https://beets.readthedocs.io/en/latest/reference/pathformat.html
+paths:
+  default: $albumartist/$albumartist - $album%if{$multidisc, [Disc $disc]}/$track - $albumartist - $album%if{$multidisc, [Disc $disc]} - %if{$multiartist,$artist - }$title
+  comp: $albumartist/$albumartist - $album%if{$multidisc, [Disc $disc]}/$track - $albumartist - $album%if{$multidisc, [Disc $disc]} - %if{$multiartist,$artist - }$title
+  ext:log: $albumpath/$albumartist - $album
+  ext:cue: $albumpath/$albumartist - $album
+# Inline plugin configuration, reference https://beets.readthedocs.io/en/latest/plugins/inline.html
+item_fields:
+  multidisc: 1 if disctotal > 1 else 0                  # Create a $multidisc field that is the number of the disc if it is a multi-disc release 
+  multiartist: 1 if albumartist != artist else 0        # Create a $multiartist boolean that represents if the track artist is not the same as the album artist
+# copyartifacts plugin configuration, reference https://github.com/sbarakat/beets-copyartifacts
+copyartifacts:
+  extensions: .cue .log .jpg                            # Copy artifacts matching these file extensions
+  print_ignored: yes                                    # Print out any artifacts that were not copied
+# fetchart plugin configuration, reference https://beets.readthedocs.io/en/latest/plugins/fetchart.html
+fetchart:
+  # Order of precedence for art sources
+  sources: filesystem coverart albumart itunes amazon google fanart *
+  auto: yes                                             # Fetch album art on import
+  cautious: no                                          # Don't only download tracks that match cover_names
+  minwidth: 500                                         # Minimum width of 500px for album art
+  maxwidth: 1500                                        # Maximum width of 1500px for album art
+  enforce_ratio: yes                                    # Only allow images with 1:1 aspect ratio
+  google_engine: 001442825323518660753:hrh5ch1gjzm      # ID of the custom search engine to use
+  google_key: <REDACTED>                                # API key to use for the search API
+  fanarttv_key: <REDACTED>                              # API key to use for the fanart API
+  store_source: yes                                     # Store the art source (e.g. filesystem) in the beets database as art_source
+# Lower the weight of beatport as a source
+beatport:
+  source_weight: 0.5
+# Lower the weight of discogs as a source, and provide an API token
+discogs:
+  source_weight: 0.5
+  user_token: <REDACTED>
+# lyrics plugin configuration, reference https://beets.readthedocs.io/en/latest/plugins/convert.html
+# Automatically fetch lyrics, and provide an API key and custom search engine to use
+lyrics:
+  auto: yes
+  google_API_key: <REDACTED>
+  google_engine_ID: 009217259823014548361:lndtuqkycfu
+# zero plugin configuration, reference https://beets.readthedocs.io/en/latest/plugins/zero.html
+zero:
+  fields: comments images month day                     # Erase all content in these fields
+  update_database: true                                 # Update the beets db to reflect these changes
+convert:
+  # Command to run for conversion process, converts to MP3 V2 using LAME
+  command: ffmpeg -i $source -y -vn -codec:a libmp3lame -qscale:a 2 $dest
+  dest: ~/media/Music/V2                                # Destination for converted music
+  extension: mp3                                        # File extension of converted music files
+  never_convert_lossy_files: yes                        # Never convert lossy files, only lossless
+  copy_album_art: no                                    # Don't copy over album art
+  embed: no                                             # Don't embed album art
