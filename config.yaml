@@ -1,5 +1,5 @@
 # Enabled plugins
-plugins: discogs beatport lyrics lastgenre copyartifacts inline zero convert
+plugins: discogs beatport lyrics lastgenre copyartifacts inline zero convert fetchart
 directory: ~/media/Music/FLAC           # Location where music is stored, in "./$artist/$artist - $album" format
 library: ~/.config/beets/library.db     # Location where the beets database is stored
 log: ~/.config/beets/importer.log       # Location where the import process will write it's logs
@@ -37,8 +37,8 @@ fetchart:
   maxwidth: 1500                                        # Maximum width of 1500px for album art
   enforce_ratio: yes                                    # Only allow images with 1:1 aspect ratio
   google_engine: 001442825323518660753:hrh5ch1gjzm      # ID of the custom search engine to use
-  google_key: <REDACTED>                                # API key to use for the search API
-  fanarttv_key: <REDACTED>                              # API key to use for the fanart API
+  google_key: #FETCHART_GOOGLE_KEY                      # API key to use for the search API
+  fanarttv_key: #FETCHART_FANARTTV_KEY                  # API key to use for the fanart API
   store_source: yes                                     # Store the art source (e.g. filesystem) in the beets database as art_source
 # Lower the weight of beatport as a source
 beatport:
@@ -46,12 +46,12 @@ beatport:
 # Lower the weight of discogs as a source, and provide an API token
 discogs:
   source_weight: 0.5
-  user_token: <REDACTED>
+  user_token: #DISCOGS_USER_TOKEN
 # lyrics plugin configuration, reference https://beets.readthedocs.io/en/latest/plugins/convert.html
 # Automatically fetch lyrics, and provide an API key and custom search engine to use
 lyrics:
   auto: yes
-  google_API_key: <REDACTED>
+  google_API_key: #LYRICS_GOOGLE_API_KEY
   google_engine_ID: 009217259823014548361:lndtuqkycfu
 # zero plugin configuration, reference https://beets.readthedocs.io/en/latest/plugins/zero.html
 zero:
