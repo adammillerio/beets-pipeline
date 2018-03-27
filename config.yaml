@@ -25,7 +25,7 @@ item_fields:
   multiartist: 1 if albumartist != artist else 0        # Create a $multiartist boolean that represents if the track artist is not the same as the album artist
 # copyartifacts plugin configuration, reference https://github.com/sbarakat/beets-copyartifacts
 copyartifacts:
-  extensions: .cue .log .jpg                            # Copy artifacts matching these file extensions
+  extensions: .cue .log .CUE .LOG                       # Copy artifacts matching these file extensions
   print_ignored: yes                                    # Print out any artifacts that were not copied
 # fetchart plugin configuration, reference https://beets.readthedocs.io/en/latest/plugins/fetchart.html
 fetchart:
