@@ -96,6 +96,7 @@ Copies any missing `cover.jpg` files over to the converted directory, and option
 | CONVERTED_SUBDIR | V2 | Subdirectory of the converted music folder that beets manages, e.g. V2 if the converted folder is ~/media/Music/V2 |
 | CONVERTED_EXTENSION | mp3 | Extension of the converted song files |
 | INTERACTIVE | true | Whether or not script is being ran interactively, if set to false, it will never pause for user input |
+| BELL | \\a | Send a bell char to alert when input is needed, set this to blank to disable |
 
 Currently, the script provides the following "steps":
 

@@ -11,6 +11,7 @@ LIBRARY_SUBDIR=${LIBRARY_SUBDIR:-FLAC}
 CONVERTED_SUBDIR=${CONVERTED_SUBDIR:-V2}
 CONVERTED_EXTENSION=${CONVERTED_EXTENSION:-mp3}
 INTERACTIVE=${INTERACTIVE:-true}
+BELL=${BELL:-\\a}
 
 import_library() {
 	echo "Importing music from $IMPORT_DIR"
@@ -30,7 +31,7 @@ audit_library() {
 	audit_beets_music
 
 	if [ $? == '1' ]; then
-		echo -e "\nMusic in beets db not in library! Fix and press any key to continue"
+		echo -e "$BELL \nMusic in beets db not in library! Fix and press any key to continue"
 		read < /dev/tty
 	fi
 
@@ -38,7 +39,7 @@ audit_library() {
 	audit_library_music
 
 	if [ $? == '1' ]; then
-		echo -e "\nMusic in library not in beets db! Fix and press any key to continue"
+		echo -e "$BELL \nMusic in library not in beets db! Fix and press any key to continue"
 		read < /dev/tty
 	fi
 
@@ -46,7 +47,7 @@ audit_library() {
 	audit_music_covers
 
 	if [ $? == '1' ]; then
-		echo -e "\nCovers missing! Fix and press any key to continue"
+		echo -e "$BELL \nCovers missing! Fix and press any key to continue"
 		read < /dev/tty
 	fi
 }
@@ -117,19 +118,21 @@ fix_log_artifacts() {
 			--dir="$LIBRARY_DIR" \
 			--ext="log" \
 			--dryrun
+		RESULT=$?
 
-		if [[ $? == '1' ]]; then
-			echo -e "\nThe above logs will be fixed, press any key to continue"
+		if [[ $RESULT == '1' ]]; then
+			echo -e "$BELL \nThe above logs will be fixed, press any key to continue"
 			read < /dev/tty
 		fi
 	fi
 
-	echo "Fixing log artifacts in $LIBRARY_DIR"
-	$PYTHON_BIN fix_artifacts.py \
-		--dir="$LIBRARY_DIR" \
-		--ext="log"
-	
-	RESULT=$?
+	if [[ $RESULT == '1' ]]; then
+		echo "Fixing log artifacts in $LIBRARY_DIR"
+		$PYTHON_BIN fix_artifacts.py \
+			--dir="$LIBRARY_DIR" \
+			--ext="log"
+		RESULT=$?
+	fi
 
 	if [[ $INTERACTIVE == 'false' ]]; then
 		exit $RESULT
@@ -145,19 +148,21 @@ fix_cue_artifacts() {
 			--dir="$LIBRARY_DIR" \
 			--ext="cue" \
 			--dryrun
+		RESULT=$?
 
-		if [[ $? == '1' ]]; then
-			echo -e "\nThe above cues will be fixed, press any key to continue"
+		if [[ $RESULT == '1' ]]; then
+			echo -e "$BELL \nThe above cues will be fixed, press any key to continue"
 			read < /dev/tty
 		fi
 	fi
 
-	echo "Fixing cue artifacts in $LIBRARY_DIR"
-	$PYTHON_BIN fix_artifacts.py \
-		--dir="$LIBRARY_DIR" \
-		--ext="cue"
-	
-	RESULT=$?
+	if [[ $RESULT == '1' ]]; then
+		echo "Fixing cue artifacts in $LIBRARY_DIR"
+		$PYTHON_BIN fix_artifacts.py \
+			--dir="$LIBRARY_DIR" \
+			--ext="cue"
+		RESULT=$?
+	fi
 
 	if [[ $INTERACTIVE == 'false' ]]; then
 		exit $RESULT
@@ -173,21 +178,23 @@ fix_jpg_artifacts() {
 			--dir="$LIBRARY_DIR" \
 			--ext="jpg" \
 			--dryrun
+		RESULT=$?
 
-		if [[ $? == '1' ]]; then
-			echo -e "\nThe above jpgs will be moved, press any key to continue"
+		if [[ $RESULT == '1' ]]; then
+			echo -e "$BELL \nThe above jpgs will be moved, press any key to continue"
 			read < /dev/tty
 		fi
 	fi
 
-	echo "Moving jpg artifacts in $LIBRARY_DIR"
-	$PYTHON_BIN fix_artifacts.py \
-		--dir="$LIBRARY_DIR" \
-		--ext="jpg" \
-		--move \
-		--movedir="$ARTIFACT_DIR"
-	
-	RESULT=$?
+	if [[ $RESULT == '1' ]]; then
+		echo "Moving jpg artifacts in $LIBRARY_DIR"
+		$PYTHON_BIN fix_artifacts.py \
+			--dir="$LIBRARY_DIR" \
+			--ext="jpg" \
+			--move \
+			--movedir="$ARTIFACT_DIR"
+		RESULT=$?
+	fi
 
 	if [[ $INTERACTIVE == 'false' ]]; then
 		exit $RESULT
@@ -203,20 +210,22 @@ fix_dir_artifacts() {
 			--dir="$LIBRARY_DIR" \
 			--ext="dir" \
 			--dryrun
+		RESULT=$?
 
-		if [[ $? == '1' ]]; then
-			echo -e "\nThe above dirs will be DELETED, press any key to continue"
+		if [[ $RESULT == '1' ]]; then
+			echo -e "$BELL \nThe above dirs will be DELETED, press any key to continue"
 			read < /dev/tty
 		fi
 	fi
 
+	if [[ $RESULT == '1' ]]; then
 	echo "Deleting dir artifacts in $LIBRARY_DIR"
-	$PYTHON_BIN fix_artifacts.py \
-		--dir="$LIBRARY_DIR" \
-		--ext="dir" \
-		--delete
-	
-	RESULT=$?
+		$PYTHON_BIN fix_artifacts.py \
+			--dir="$LIBRARY_DIR" \
+			--ext="dir" \
+			--delete
+		RESULT=$?
+	fi
 
 	if [[ $INTERACTIVE == 'false' ]]; then
 		exit $RESULT
@@ -243,7 +252,7 @@ audit_converted() {
 	audit_converted_music
 
 	if [ $? == '1' ]; then
-		echo -e "\nConverted music missing! Check converted.log, fix and press any key to continue"
+		echo -e "$BELL \nConverted music missing! Check converted.log, fix and press any key to continue"
 		read < /dev/tty
 	fi
 }
@@ -279,21 +288,23 @@ fix_converted_covers() {
 			--librarydir="$LIBRARY_SUBDIR" \
 			--converteddir="$CONVERTED_SUBDIR" \
 			--dryrun
+		RESULT=$?
 
-		if [[ $? == '1' ]]; then
-			echo -e "\nThe above covers will be copied and embedded, press any key to continue"
+		if [[ $RESULT == '1' ]]; then
+			echo -e "$BELL \nThe above covers will be copied and embedded, press any key to continue"
 			read < /dev/tty
 		fi
 	fi
 
+	if [[ $RESULT == '1' ]]; then
 	echo "Copying and embedding covers in $CONVERTED_DIR"
-	$PYTHON_BIN copy_covers.py \
-		--dir="$LIBRARY_DIR" \
-		--librarydir="$LIBRARY_SUBDIR" \
-		--converteddir="$CONVERTED_SUBDIR" \
-		--embed
-	
-	RESULT=$?
+		$PYTHON_BIN copy_covers.py \
+			--dir="$LIBRARY_DIR" \
+			--librarydir="$LIBRARY_SUBDIR" \
+			--converteddir="$CONVERTED_SUBDIR" \
+			--embed
+		RESULT=$?
+	fi
 
 	if [[ $INTERACTIVE == 'false' ]]; then
 		exit $RESULT
@@ -307,7 +318,7 @@ cleanup_import() {
 		echo -e "Listing files to be deleted in $IMPORT_DIR \n"
 		find $IMPORT_DIR/*
 		
-		echo -e "\nThe above files and folders will be DELETED, press any key to continue"
+		echo -e "$BELL \nThe above files and folders will be DELETED, press any key to continue"
 		read < /dev/tty
 	fi
 
