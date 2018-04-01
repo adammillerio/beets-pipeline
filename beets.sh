@@ -1,4 +1,15 @@
 #!/bin/bash
+PYTHON_VERSION=${PYTHON_VERSION:-2.7.14}
+BEETS_VERSION=${BEETS_VERSION:-1.4.6}
+PYLAST_VERSION=${PYLAST_VERSION:-2.1.0}
+BS4_VERSION=${BS4_VERSION:-4.6.0}
+DISCOGS_CLIENT_VERSION=${DISCOGS_CLIENT_VERSION:-2.2.1}
+REQUESTS_VERSION=${REQUESTS_VERSION:-2.11.1}
+REQUESTS_OAUTHLIB_VERSION=${REQUESTS_OAUTHLIB_VERSION:-0.8.0}
+BEETS_COPYARTIFACTS_VERSION=${BEETS_COPYARTIFACTS_VERSION:-0.1.2}
+
+PLATFORM=$(lsb_release -i -s)
+USE_VENV=${USE_VENV:-true}
 BEETS_BIN=${BEETS_BIN:-beet}
 PYTHON_BIN=${PYTHON_BIN:-python3}
 IMPORT_DIR=${IMPORT_DIR:-~/media/Music/Import}
@@ -12,6 +23,77 @@ CONVERTED_SUBDIR=${CONVERTED_SUBDIR:-V2}
 CONVERTED_EXTENSION=${CONVERTED_EXTENSION:-mp3}
 INTERACTIVE=${INTERACTIVE:-true}
 BELL=${BELL:-\\a}
+
+activate_venv() {
+	echo 'Adding pyenv to PATH'
+	PATH="~/.pyenv/bin:$PATH"
+
+	echo 'Activating pyenv'
+	eval "$(pyenv init -)"
+	eval "$(pyenv virtualenv-init -)"
+
+	echo 'Activating beets venv'
+	pyenv activate beets
+
+	echo 'Rehash beets venv'
+	pyenv rehash
+}
+
+deploy_venv() {
+	echo 'Installing platform specific tools'
+	if [[ $PLATFORM == 'Debian' ]]; then
+		sudo apt update
+		sudo apt-get install --no-install-recommends -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
+		libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
+		xz-utils tk-dev
+	fi
+
+	echo 'Checking if pyenv is installed'
+	PATH="~/.pyenv/bin:$PATH"
+	which pyenv
+	if [ $? == '1' ]; then
+		echo 'Pyenv not found, installing'
+
+		echo 'Installing pyenv'
+		git clone https://github.com/pyenv/pyenv-installer.git pyenv-installer
+		chmod +x ./pyenv-installer/pyenv-installer
+		./pyenv-installer/pyenv-installer
+		rm -rf ./pyenv-installer
+	fi
+
+	echo 'Activating pyenv'
+	eval "$(pyenv init -)"
+	eval "$(pyenv virtualenv-init -)"
+
+	echo "Installing Python v$PYTHON_VERSION"
+	pyenv install -s -v $PYTHON_VERSION
+
+	echo 'Creating beets virtualenv'
+	pyenv virtualenv $PYTHON_VERSION beets
+
+	echo 'virtualenv created'
+}
+
+deploy_beets() {
+	echo 'Installing ffmpeg and imagemagick'
+	if [[ $PLATFORM == 'Debian' ]]; then
+		sudo apt update
+		sudo apt install --no-install-recommends -y ffmpeg imagemagick
+	fi
+
+	echo 'Installing beets and plugins'
+	pip install \
+		beets==$BEETS_VERSION \
+		pylast==$PYLAST_VERSION \
+		beautifulsoup4==$BS4_VERSION \
+		discogs-client==$DISCOGS_CLIENT_VERSION \
+		requests==$REQUESTS_VERSION \
+		requests_oauthlib==$REQUESTS_OAUTHLIB_VERSION \
+		beets-copyartifacts==$BEETS_COPYARTIFACTS_VERSION
+
+	echo 'Installing python-itunes'
+	pip install https://github.com/ocelma/python-itunes/archive/master.zip
+}
 
 import_library() {
 	echo "Importing music from $IMPORT_DIR"
@@ -111,7 +193,7 @@ fix_library() {
 	fix_dir_artifacts
 }
 
-fix_log_artifacts() {
+fix_log_artifacts() {	
 	if [[ $INTERACTIVE == 'true' ]]; then
 		echo -e "Listing log artifacts in $LIBRARY_DIR \n"
 		$PYTHON_BIN fix_artifacts.py \
@@ -141,7 +223,7 @@ fix_log_artifacts() {
 	fi
 }
 
-fix_cue_artifacts() {
+fix_cue_artifacts() {	
 	if [[ $INTERACTIVE == 'true' ]]; then
 		echo -e "Listing cue artifacts in $LIBRARY_DIR \n"
 		$PYTHON_BIN fix_artifacts.py \
@@ -171,7 +253,7 @@ fix_cue_artifacts() {
 	fi
 }
 
-fix_jpg_artifacts() {
+fix_jpg_artifacts() {	
 	if [[ $INTERACTIVE == 'true' ]]; then
 		echo -e "Listing jpg artifacts in $LIBRARY_DIR \n"
 		$PYTHON_BIN fix_artifacts.py \
@@ -203,7 +285,7 @@ fix_jpg_artifacts() {
 	fi
 }
 
-fix_dir_artifacts() {
+fix_dir_artifacts() {	
 	if [[ $INTERACTIVE == 'true' ]]; then
 		echo -e "Listing dir artifacts in $LIBRARY_DIR \n"
 		$PYTHON_BIN fix_artifacts.py \
@@ -234,7 +316,7 @@ fix_dir_artifacts() {
 	fi
 }
 
-convert_library() {
+convert_library() {	
 	echo "Converting music in $LIBRARY_DIR"
 	$BEETS_BIN convert -y -a > ./convert.log 2>&1
 
@@ -257,7 +339,7 @@ audit_converted() {
 	fi
 }
 
-audit_converted_music() {
+audit_converted_music() {	
 	echo "Checking for music in $CONVERTED_DIR not present in $BEETS_DB"
 	$PYTHON_BIN audit_missing_converted_music.py \
 		--db="$BEETS_DB" \
@@ -280,7 +362,7 @@ fix_converted() {
 	fix_converted_covers
 }
 
-fix_converted_covers() {
+fix_converted_covers() {	
 	if [[ $INTERACTIVE == 'true' ]]; then
 		echo -e "Listing covers in $CONVERTED_DIR \n"
 		$PYTHON_BIN copy_covers.py \
@@ -313,7 +395,7 @@ fix_converted_covers() {
 	fi
 }
 
-cleanup_import() {
+cleanup_import() {	
 	if [[ $INTERACTIVE == 'true' ]]; then
 		echo -e "Listing files to be deleted in $IMPORT_DIR \n"
 		find $IMPORT_DIR/*
@@ -341,5 +423,10 @@ full() {
 	fix_converted
 	cleanup_import
 }
+
+if [[ $USE_VENV == 'true' && $1 != 'deploy_venv' ]]; then
+	echo 'Activating beets virtual environment'
+	activate_venv
+fi
 
 $1
