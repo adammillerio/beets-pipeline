@@ -1,4 +1,9 @@
 #!/bin/bash
+if [ -e .env ]; then
+	echo 'env found, loading'
+	export $(xargs < .env)
+fi
+
 PYTHON_VERSION=${PYTHON_VERSION:-2.7.14}
 BEETS_VERSION=${BEETS_VERSION:-1.4.6}
 PYLAST_VERSION=${PYLAST_VERSION:-2.1.0}
@@ -24,6 +29,7 @@ CONVERTED_SUBDIR=${CONVERTED_SUBDIR:-V2}
 CONVERTED_EXTENSION=${CONVERTED_EXTENSION:-mp3}
 INTERACTIVE=${INTERACTIVE:-true}
 BELL=${BELL:-\\a}
+USE_SUBSONIC=${USE_SUBSONIC:-false}
 
 activate_venv() {
 	echo 'Adding pyenv to PATH'
@@ -426,6 +432,33 @@ cleanup_import() {
 	fi
 }
 
+update_subsonic() {
+	echo 'Updating subsonic library'
+	
+	SUBSONIC_CLIENT=${SUBSONIC_CLIENT:-beets-pipeline}
+	SUBSONIC_VERSION=${SUBSONIC_VERSION:-1.15.0}
+	SUBSONIC_FORMAT=${SUBSONIC_FORMAT:-json}
+	SUBSONIC_URL=${SUBSONIC_URL:?'ERROR: Specify the full URL to subsonic in $SUBSONIC_URL'}
+	SUBSONIC_USERNAME=${SUBSONIC_USERNAME:?'ERROR: Specify the username to authenticate to subsonic as $SUBSONIC_USERNAME'}
+	SUBSONIC_PASSWORD=${SUBSONIC_PASSWORD:?'ERROR: Specify the password to authenticate to subsonic as $SUBSONIC_PASSWORD'}
+
+	curl -X GET \
+		"$SUBSONIC_URL/rest/startScan?u=$SUBSONIC_USERNAME&p=$SUBSONIC_PASSWORD&c=$SUBSONIC_CLIENT&v=$SUBSONIC_VERSION&f=$SUBSONIC_FORMAT"
+	RESULT=$?
+
+	if [[ $RESULT != '0' ]]; then
+		>&2 echo 'ERROR: Subsonic library not updated, check configuration and connectivity'
+	else
+		echo -e '\nSubsonic library update started'
+	fi 
+
+	if [[ $INTERACTIVE == 'false' ]]; then
+		exit $RESULT
+	else
+		return $RESULT
+	fi
+}
+
 full() {
 	import_library
 	audit_library
@@ -434,6 +467,10 @@ full() {
 	audit_converted
 	fix_converted
 	cleanup_import
+
+	if [[ $USE_SUBSONIC == 'true' ]]; then
+		update_subsonic
+	fi
 }
 
 if [[ $USE_VENV == 'true' && $1 != 'deploy_venv' && $1 != 'install' ]]; then
