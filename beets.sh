@@ -7,11 +7,12 @@ DISCOGS_CLIENT_VERSION=${DISCOGS_CLIENT_VERSION:-2.2.1}
 REQUESTS_VERSION=${REQUESTS_VERSION:-2.11.1}
 REQUESTS_OAUTHLIB_VERSION=${REQUESTS_OAUTHLIB_VERSION:-0.8.0}
 BEETS_COPYARTIFACTS_VERSION=${BEETS_COPYARTIFACTS_VERSION:-0.1.2}
+MUTAGEN_VERSION=${MUTAGEN_VERSION:-1.40.0}
 
 PLATFORM=$(lsb_release -i -s)
 USE_VENV=${USE_VENV:-true}
 BEETS_BIN=${BEETS_BIN:-beet}
-PYTHON_BIN=${PYTHON_BIN:-python3}
+PYTHON_BIN=${PYTHON_BIN:-python}
 IMPORT_DIR=${IMPORT_DIR:-~/media/Music/Import}
 LIBRARY_DIR=${LIBRARY_DIR:-~/media/Music/FLAC}
 CONVERTED_DIR=${CONVERTED_DIR:-~/media/Music/V2}
@@ -37,6 +38,16 @@ activate_venv() {
 
 	echo 'Rehash beets venv'
 	pyenv rehash
+}
+
+install() {
+	if [[ $USE_VENV == 'true' ]]; then
+		echo 'Installing beets virtual environment'
+		deploy_venv
+	fi
+	
+	echo 'Installing beets'
+	deploy_certbot
 }
 
 deploy_venv() {
@@ -89,7 +100,8 @@ deploy_beets() {
 		discogs-client==$DISCOGS_CLIENT_VERSION \
 		requests==$REQUESTS_VERSION \
 		requests_oauthlib==$REQUESTS_OAUTHLIB_VERSION \
-		beets-copyartifacts==$BEETS_COPYARTIFACTS_VERSION
+		beets-copyartifacts==$BEETS_COPYARTIFACTS_VERSION \
+		mutagen==$MUTAGEN_VERSION
 
 	echo 'Installing python-itunes'
 	pip install https://github.com/ocelma/python-itunes/archive/master.zip
@@ -424,7 +436,7 @@ full() {
 	cleanup_import
 }
 
-if [[ $USE_VENV == 'true' && $1 != 'deploy_venv' ]]; then
+if [[ $USE_VENV == 'true' && $1 != 'deploy_venv' && $1 != 'install' ]]; then
 	echo 'Activating beets virtual environment'
 	activate_venv
 fi
