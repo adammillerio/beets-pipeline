@@ -2,6 +2,7 @@
 # beetutils.py
 # A collection of helper functions for managing a beets library
 import os,fnmatch,sqlite3
+from sys import version_info
 
 def get_library_albums(library_dir):
     """
@@ -66,7 +67,10 @@ def get_beets_songs(db, extension="flac"):
 
     conn = sqlite3.connect(db)
 
-    beets_songs = [row[0].decode("UTF-8") for row in conn.execute("SELECT path FROM items")]
+    if version_info > (3, 0):
+        beets_songs = [row[0].decode("UTF-8") for row in conn.execute("SELECT path FROM items")]
+    else:
+        beets_songs = [str(row[0]) for row in conn.execute("SELECT path FROM items")]
     
     return [os.path.splitext(beets_song)[0] + ".%s" % extension for beets_song in beets_songs]
 
