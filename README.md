@@ -153,7 +153,7 @@ These variables are used to configure the versions of software that are installe
 | BEETS_VERSION | 1.4.6 | Beets |
 | PYLAST_VERSION | 2.1.0 | PyLast Last.FM module |
 | BS4_VERSION | 4.6.0 | BeautifulSoup4 web scraper |
-| DISCOGS_CLIENT_VERSION | discogs-client module |
+| DISCOGS_CLIENT_VERSION | 2.2.1 | discogs-client module |
 | REQUESTS_VERSION | 2.11.1 | Python Requests module |
 | REQUESTS_OAUTHLIB_VERSION | 0.8.0 | Python Requests OAuth module |
 | BEETS_COPYARTIFACTS_VERSION | 0.1.2 | Beets CopyArtifacts plugin |
