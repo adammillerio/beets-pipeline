@@ -167,7 +167,6 @@ Currently, the script provides the following "steps":
 | install | Runs deploy_venv if using a virtual environment, and deploy_beets |
 | deploy_venv | Installs pyenv, Python, and creates a virtual environment |
 | deploy_beets | Installs beets and all dependencies necessary for this pipeline |
-
 | import_library | Imports all files currently in the import directory |
 | audit_library | Runs audit_beets_music, audit_library_music, and audit_music_covers |
 | audit_beets_music | Checks for music in the beets database not present in the library folder |
