@@ -2,6 +2,35 @@
 
 This is a collection of scripts used for a beets music management workflow.
 
+# Installation
+
+This utilizes [pyenv](https://github.com/pyenv/pyenv) in order to create a virtual environment to work out of. After configuration, just run `./beets.sh install` and an environment with certbot installed will be created. If you do not want to use a virtual environment, run the same command with `USE_VENV=false`.
+
+Currently, the virtual environment installation only targets Debian.
+
+If installing from scratch outside of the virtual environment, the following packages are required:
+
+* Python - The scripts support 2 or 3, but beets only supports 2
+* pip
+* imagemagick
+* ffmpeg
+
+In addition, the following packages should be installed via pip:
+
+* beets
+* pylast
+* beautifulsoup4
+* discogs-client
+* requests
+* requests_oauthlib
+* beets-copyartifacts
+* mutagen
+* python-itunes (`pip install https://github.com/ocelma/python-itunes/archive/master.zip`)
+
+# Configuration
+
+All configuration variables are provided below in the `beets.sh` section. It is recommended that these configuration options be stored in a `.env` file located in the root of the directory that `beets.sh` is running out of. This file will be parsed in, and values will override any defaults in the script.
+
 # Components
 This workflow is composed of beets music manager, several python scripts, and a manager script called beets.sh.
 
@@ -84,6 +113,8 @@ Copies any missing `cover.jpg` files over to the converted directory, and option
 
 | Name  | Default  | Description  |
 |---|---|---|
+| PLATFORM | `lsb_release -i -s` | Platform, used during package installation |
+| USE_VENV | true | Whether or not to use a pyenv virtual environment |
 | BEETS_BIN | beet | Path to the `beet` binary to use for beets operations |
 | PYTHON_BIN | python3 | Path to the `python3` binary to use for python scripts |
 | IMPORT_DIR | ~/media/Music/Import | Path for beets to import music from |
@@ -98,10 +129,45 @@ Copies any missing `cover.jpg` files over to the converted directory, and option
 | INTERACTIVE | true | Whether or not script is being ran interactively, if set to false, it will never pause for user input |
 | BELL | \\a | Send a bell char to alert when input is needed, set this to blank to disable |
 
+### Subsonic Configuration
+
+Optionally, if using Subonic, the following values can be supplied to trigger a library update at the end of the pipeline:
+
+| Name  | Default  | Description  |
+|---|---|---|
+| USE_SUBSONIC | false | Whether or not to update a Subsonic library |
+| SUBSONIC_USERNAME | N/A | Required, Username to authenticate to Subsonic with |
+| SUBSONIC_PASSWORD | N/A | Required, Password to authenticate to Subsonic with |
+| SUBSONIC_URL | N/A | Required, full URL to Subsonic (e.g. `https://subsonic.local`) |
+| SUBSONIC_CLIENT | beets-pipeline | Client string to provide to Subsonic |
+| SUBSONIC_VERSION | 1.15.0 | API version to use |
+| SUBSONIC_FORMAT | json | Format of the API response |
+
+### Version Configuration
+
+These variables are used to configure the versions of software that are installed:
+
+| Name  | Default  | Description |
+|---|---|---|
+| PYTHON_VERSION | 2.7.14 | Python interpreter to install in the virtual environment |
+| BEETS_VERSION | 1.4.6 | Beets |
+| PYLAST_VERSION | 2.1.0 | PyLast Last.FM module |
+| BS4_VERSION | 4.6.0 | BeautifulSoup4 web scraper |
+| DISCOGS_CLIENT_VERSION | discogs-client module |
+| REQUESTS_VERSION | 2.11.1 | Python Requests module |
+| REQUESTS_OAUTHLIB_VERSION | 0.8.0 | Python Requests OAuth module |
+| BEETS_COPYARTIFACTS_VERSION | 0.1.2 | Beets CopyArtifacts plugin |
+| MUTAGEN_VERSION | 1.40.0 | Mutagen music metadata editor module |
+
 Currently, the script provides the following "steps":
 
 | Step | Description |
 |---|---|
+| activate_venv | "Activates" the Python virtual environment |
+| install | Runs deploy_venv if using a virtual environment, and deploy_beets |
+| deploy_venv | Installs pyenv, Python, and creates a virtual environment |
+| deploy_beets | Installs beets and all dependencies necessary for this pipeline |
+
 | import_library | Imports all files currently in the import directory |
 | audit_library | Runs audit_beets_music, audit_library_music, and audit_music_covers |
 | audit_beets_music | Checks for music in the beets database not present in the library folder |
@@ -118,6 +184,7 @@ Currently, the script provides the following "steps":
 | fix_converted | Runs fix_converted_covers |
 | fix_converted_covers | Copies any missing covers from the library folder to the converted folder and embeds them |
 | cleanup_import | Lists all leftover files in the import directory, and deletes them if necessary |
-| full | Runs import_library, audit_library, fix_library, convert_library, audit_converted, fix_converted, and cleanup_import |
+| update_subsonic | Triggers a library scan on a Subsonic instance |
+| full | Runs import_library, audit_library, fix_library, convert_library, audit_converted, fix_converted, cleanup_import, and update_subsonic if enabled |
 
 These can be invoked with `./beets.sh $STEP`. This MUST be ran from the working directory of beets.sh so it can reference the Python scripts
