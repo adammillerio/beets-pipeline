@@ -336,7 +336,8 @@ fix_dir_artifacts() {
 
 convert_library() {	
 	echo "Converting music in $LIBRARY_DIR"
-	$BEETS_BIN convert -y -a > ./convert.log 2>&1
+	DATE=$(date +%Y-%m-%d)
+	$BEETS_BIN convert -y "added:$DATE" > ./convert.log 2>&1
 
 	RESULT=$?
 
@@ -442,7 +443,7 @@ update_subsonic() {
 	SUBSONIC_USERNAME=${SUBSONIC_USERNAME:?'ERROR: Specify the username to authenticate to subsonic as $SUBSONIC_USERNAME'}
 	SUBSONIC_PASSWORD=${SUBSONIC_PASSWORD:?'ERROR: Specify the password to authenticate to subsonic as $SUBSONIC_PASSWORD'}
 
-	curl -X GET \
+	curl -k -X GET \
 		"$SUBSONIC_URL/rest/startScan?u=$SUBSONIC_USERNAME&p=$SUBSONIC_PASSWORD&c=$SUBSONIC_CLIENT&v=$SUBSONIC_VERSION&f=$SUBSONIC_FORMAT"
 	RESULT=$?
 
