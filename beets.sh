@@ -4,18 +4,19 @@ if [ -e .env ]; then
 	export $(xargs < .env)
 fi
 
-PYTHON_VERSION=${PYTHON_VERSION:-2.7.14}
-BEETS_VERSION=${BEETS_VERSION:-1.4.6}
-PYLAST_VERSION=${PYLAST_VERSION:-2.1.0}
-BS4_VERSION=${BS4_VERSION:-4.6.0}
-DISCOGS_CLIENT_VERSION=${DISCOGS_CLIENT_VERSION:-2.2.1}
-REQUESTS_VERSION=${REQUESTS_VERSION:-2.11.1}
-REQUESTS_OAUTHLIB_VERSION=${REQUESTS_OAUTHLIB_VERSION:-0.8.0}
-BEETS_COPYARTIFACTS_VERSION=${BEETS_COPYARTIFACTS_VERSION:-0.1.2}
-MUTAGEN_VERSION=${MUTAGEN_VERSION:-1.40.0}
+PYTHON_VERSION=${PYTHON_VERSION:-3.8.1}
+BEETS_VERSION=${BEETS_VERSION:-1.4.9}
+PYLAST_VERSION=${PYLAST_VERSION:-3.2.0}
+BS4_VERSION=${BS4_VERSION:-4.8.2}
+DISCOGS_CLIENT_VERSION=${DISCOGS_CLIENT_VERSION:-2.2.2}
+REQUESTS_VERSION=${REQUESTS_VERSION:-2.22.0}
+REQUESTS_OAUTHLIB_VERSION=${REQUESTS_OAUTHLIB_VERSION:-1.3.0}
+BEETS_COPYARTIFACTS_VERSION=${BEETS_COPYARTIFACTS_VERSION:-0.1.3}
+MUTAGEN_VERSION=${MUTAGEN_VERSION:-1.44.0}
 
 PLATFORM=$(lsb_release -i -s)
 USE_VENV=${USE_VENV:-true}
+VENV_NAME=${VENV_NAME:-beets}
 BEETS_BIN=${BEETS_BIN:-beet}
 PYTHON_BIN=${PYTHON_BIN:-python}
 IMPORT_DIR=${IMPORT_DIR:-~/media/Music/Import}
@@ -40,7 +41,7 @@ activate_venv() {
 	eval "$(pyenv virtualenv-init -)"
 
 	echo 'Activating beets venv'
-	pyenv activate beets
+	pyenv activate $VENV_NAME
 
 	echo 'Rehash beets venv'
 	pyenv rehash
@@ -53,7 +54,7 @@ install() {
 	fi
 	
 	echo 'Installing beets'
-	deploy_certbot
+	deploy_beets
 }
 
 deploy_venv() {
@@ -62,7 +63,7 @@ deploy_venv() {
 		sudo apt update
 		sudo apt-get install --no-install-recommends -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
 		libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
-		xz-utils tk-dev
+		xz-utils tk-dev libffi-dev
 	fi
 
 	echo 'Checking if pyenv is installed'
@@ -86,9 +87,19 @@ deploy_venv() {
 	pyenv install -s -v $PYTHON_VERSION
 
 	echo 'Creating beets virtualenv'
-	pyenv virtualenv $PYTHON_VERSION beets
+	pyenv virtualenv $PYTHON_VERSION $VENV_NAME
+	RESULT=$?
+	if [[ $RESULT == '1' ]]; then
+		echo -e "$BELL \nVirtualenv creation failed, either resolve error listed above, run destroy_venv, or specify a different name with VENV_NAME"
+		exit $RESULT
+	fi
 
 	echo 'virtualenv created'
+}
+
+destroy_venv() {
+	echo 'Deleting beets virtualenv'
+	pyenv virtualenv-delete -f $VENV_NAME
 }
 
 deploy_beets() {
@@ -106,7 +117,7 @@ deploy_beets() {
 		discogs-client==$DISCOGS_CLIENT_VERSION \
 		requests==$REQUESTS_VERSION \
 		requests_oauthlib==$REQUESTS_OAUTHLIB_VERSION \
-		beets-copyartifacts==$BEETS_COPYARTIFACTS_VERSION \
+		beets-copyartifacts3==$BEETS_COPYARTIFACTS_VERSION \
 		mutagen==$MUTAGEN_VERSION
 
 	echo 'Installing python-itunes'
@@ -336,8 +347,7 @@ fix_dir_artifacts() {
 
 convert_library() {	
 	echo "Converting music in $LIBRARY_DIR"
-	DATE=$(date +%Y-%m-%d)
-	$BEETS_BIN convert -y "added:$DATE" > ./convert.log 2>&1
+	$BEETS_BIN convert -y "added:-1d.." > ./convert.log 2>&1
 
 	RESULT=$?
 

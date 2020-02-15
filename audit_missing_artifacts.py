@@ -11,7 +11,7 @@
 # python3 audit_missing_artifacts.py --dir=~/Music --artifact=cover.jpg
 import argparse,os,beetutils
 
-def main(library_dir, artifact):
+def main(library_dir: str, artifact: str) -> int:
     library_dir = os.path.expanduser(library_dir)
     library_albums = beetutils.get_library_albums(library_dir)
 
@@ -27,7 +27,7 @@ def main(library_dir, artifact):
             audit_result = False
             print(album_path)
     
-    exit(0 if audit_result else 1)
+    return 0 if audit_result else 1
 
 if __name__ == "__main__":
     # Interactive command line arguments

@@ -17,7 +17,7 @@
 # python3 fix_artifacts.py --dir=~/media/Music/FLAC --ext=jpg --delete
 import argparse,os,beetutils
 
-def main(library_dir, artifact_extension, delete, dry_run, move, move_dir):
+def main(library_dir: str, artifact_extension: str, delete: bool, dry_run: bool, move: bool, move_dir: str) -> int:
     # Extension
     library_dir = os.path.expanduser(library_dir)
     if move:
@@ -72,38 +72,17 @@ def main(library_dir, artifact_extension, delete, dry_run, move, move_dir):
                 else:
                     audit_result = False
     
-    exit(0 if audit_result else 1)
-
-def string_to_boolean(string_value):
-    """
-    Convert a string argument to a boolean
-
-    Args:
-        string_value: String value to be converted
-    
-    Returns:
-        A boolean representation of the string value
-    
-    Raises:
-        argparse.ArgumentTypeError: If the string provided does not have a boolean equivalent
-    """
-
-    if string_value.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif string_value.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+    return 0 if audit_result else 1
 
 if __name__ == "__main__":
     # Interactive command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--dir", nargs="?", default="~/media/Music/FLAC", help="Location of the beets music library files")
     parser.add_argument("--ext", nargs="?", default="cue", help="The extension of the artifact to fix")
-    parser.add_argument("--move", type=string_to_boolean, nargs="?", const=True, default="no", help="Move the artifact to a specified folder instead of renaming it")
+    parser.add_argument("--move", type=beetutils.string_to_boolean, nargs="?", const=True, default="no", help="Move the artifact to a specified folder instead of renaming it")
     parser.add_argument("--movedir", nargs="?", default="~/media/Music/Misc/Artifacts", help="Directory to move artifacts to, if --move specified")
-    parser.add_argument("--delete", type=string_to_boolean, nargs="?", const=True, default="no", help="Delete the artifact instead of renaming it (DANGEROUS)")
-    parser.add_argument("--dryrun", type=string_to_boolean, nargs="?", const=True, default="no", help="Dry run, don't modify artifacts")
+    parser.add_argument("--delete", type=beetutils.string_to_boolean, nargs="?", const=True, default="no", help="Delete the artifact instead of renaming it (DANGEROUS)")
+    parser.add_argument("--dryrun", type=beetutils.string_to_boolean, nargs="?", const=True, default="no", help="Dry run, don't modify artifacts")
     args = parser.parse_args()
 
     exit(main(args.dir, args.ext, args.delete, args.dryrun, args.move, args.movedir))

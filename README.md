@@ -10,7 +10,7 @@ Currently, the virtual environment installation only targets Debian.
 
 If installing from scratch outside of the virtual environment, the following packages are required:
 
-* Python - The scripts support 2 or 3, but beets only supports 2
+* Python - 2 or 3, but 3 is strongly encouraged
 * pip
 * imagemagick
 * ffmpeg
@@ -23,7 +23,7 @@ In addition, the following packages should be installed via pip:
 * discogs-client
 * requests
 * requests_oauthlib
-* beets-copyartifacts
+* beets-copyartifacts3 (Fork of beets-copyartifacts with Py3 support)
 * mutagen
 * python-itunes (`pip install https://github.com/ocelma/python-itunes/archive/master.zip`)
 
@@ -115,6 +115,7 @@ Copies any missing `cover.jpg` files over to the converted directory, and option
 |---|---|---|
 | PLATFORM | `lsb_release -i -s` | Platform, used during package installation |
 | USE_VENV | true | Whether or not to use a pyenv virtual environment |
+| VENV_NAME | beets | Name of the pyenv virtual environment to use |
 | BEETS_BIN | beet | Path to the `beet` binary to use for beets operations |
 | PYTHON_BIN | python3 | Path to the `python3` binary to use for python scripts |
 | IMPORT_DIR | ~/media/Music/Import | Path for beets to import music from |
@@ -149,15 +150,15 @@ These variables are used to configure the versions of software that are installe
 
 | Name  | Default  | Description |
 |---|---|---|
-| PYTHON_VERSION | 2.7.14 | Python interpreter to install in the virtual environment |
-| BEETS_VERSION | 1.4.6 | Beets |
-| PYLAST_VERSION | 2.1.0 | PyLast Last.FM module |
-| BS4_VERSION | 4.6.0 | BeautifulSoup4 web scraper |
-| DISCOGS_CLIENT_VERSION | 2.2.1 | discogs-client module |
-| REQUESTS_VERSION | 2.11.1 | Python Requests module |
-| REQUESTS_OAUTHLIB_VERSION | 0.8.0 | Python Requests OAuth module |
-| BEETS_COPYARTIFACTS_VERSION | 0.1.2 | Beets CopyArtifacts plugin |
-| MUTAGEN_VERSION | 1.40.0 | Mutagen music metadata editor module |
+| PYTHON_VERSION | 3.8.1 | Python interpreter to install in the virtual environment |
+| BEETS_VERSION | 1.4.9 | Beets |
+| PYLAST_VERSION | 3.2.0 | PyLast Last.FM module |
+| BS4_VERSION | 4.8.2 | BeautifulSoup4 web scraper |
+| DISCOGS_CLIENT_VERSION | 2.2.2 | discogs-client module |
+| REQUESTS_VERSION | 2.22.0 | Python Requests module |
+| REQUESTS_OAUTHLIB_VERSION | 1.3.0 | Python Requests OAuth module |
+| BEETS_COPYARTIFACTS_VERSION | 0.1.3 | Beets CopyArtifacts plugin |
+| MUTAGEN_VERSION | 1.44.0 | Mutagen music metadata editor module |
 
 Currently, the script provides the following "steps":
 
