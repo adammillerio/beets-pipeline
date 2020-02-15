@@ -336,8 +336,7 @@ fix_dir_artifacts() {
 
 convert_library() {	
 	echo "Converting music in $LIBRARY_DIR"
-	DATE=$(date +%Y-%m-%d)
-	$BEETS_BIN convert -y "added:$DATE" > ./convert.log 2>&1
+	$BEETS_BIN convert -y "added:-1d.." > ./convert.log 2>&1
 
 	RESULT=$?
 
