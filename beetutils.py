@@ -3,8 +3,10 @@
 # A collection of helper functions for managing a beets library
 import os,fnmatch,sqlite3
 from sys import version_info
+from argparse import ArgumentTypeError
+from typing import List
 
-def get_library_albums(library_dir):
+def get_library_albums(library_dir: str) -> List[str]:
     """
     Retrieve all paths to albums in a library
 
@@ -28,7 +30,7 @@ def get_library_albums(library_dir):
     
     return library_albums
 
-def get_folder_artifacts(folder, artifact_extension):
+def get_folder_artifacts(folder: str, artifact_extension: str) -> List[str]:
     """
     Retrieve all artifacts that match an extension within a folder
 
@@ -53,7 +55,7 @@ def get_folder_artifacts(folder, artifact_extension):
 
     return artifacts
 
-def get_beets_songs(db, extension="flac"):
+def get_beets_songs(db: str, extension: str = "flac") -> List[str]:
     """
     Retrieve all paths to songs in a beets database
 
@@ -65,16 +67,19 @@ def get_beets_songs(db, extension="flac"):
         An array of all full song paths in a beets database
     """
 
-    conn = sqlite3.connect(db)
+    try:
+        conn = sqlite3.connect(db)
 
-    if version_info > (3, 0):
-        beets_songs = [row[0].decode("UTF-8") for row in conn.execute("SELECT path FROM items")]
-    else:
-        beets_songs = [str(row[0]) for row in conn.execute("SELECT path FROM items")]
-    
-    return [os.path.splitext(beets_song)[0] + ".%s" % extension for beets_song in beets_songs]
+        if version_info > (3, 0):
+            beets_songs = [row[0].decode("UTF-8") for row in conn.execute("SELECT path FROM items")]
+        else:
+            beets_songs = [str(row[0]) for row in conn.execute("SELECT path FROM items")]
+        
+        return [os.path.splitext(beets_song)[0] + ".%s" % extension for beets_song in beets_songs]
+    finally:
+        conn.close()
 
-def get_library_songs(library_dir, extension="flac"):
+def get_library_songs(library_dir: str, extension: str = "flac") -> List[str]:
     """
     Retrieve all paths to songs in a music library
 
@@ -96,3 +101,24 @@ def get_library_songs(library_dir, extension="flac"):
             library_songs.append(os.path.join(root, filename))
     
     return library_songs
+
+def string_to_boolean(string_value: str) -> bool:
+    """
+    Convert a string argument to a boolean
+
+    Args:
+        string_value: String value to be converted
+    
+    Returns:
+        A boolean representation of the string value
+    
+    Raises:
+        argparse.ArgumentTypeError: If the string provided does not have a boolean equivalent
+    """
+
+    if string_value.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif string_value.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise ArgumentTypeError('Boolean value expected.')

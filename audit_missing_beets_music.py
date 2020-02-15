@@ -11,7 +11,7 @@
 import argparse,beetutils
 from os.path import expanduser
 
-def main(db, library_dir):
+def main(db: str, library_dir: str) -> int:
     # Expansion
     library_dir = expanduser(library_dir)
     db = expanduser(db)
@@ -28,7 +28,7 @@ def main(db, library_dir):
             audit_result = False
             print(beets_song)
     
-    exit(0 if audit_result else 1)
+    return 0 if audit_result else 1
 
 if __name__ == "__main__":
     # Interactive command line arguments

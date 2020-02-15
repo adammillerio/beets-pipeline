@@ -22,7 +22,7 @@ from shutil import copyfile
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, APIC, error
 
-def main(library_dir, library_subdir, converted_subdir, dry_run, embed):
+def main(library_dir: str, library_subdir: str, converted_subdir: str, dry_run: bool, embed: bool) -> int:
     # Expansion
     library_dir = os.path.expanduser(library_dir)
 
@@ -49,20 +49,24 @@ def main(library_dir, library_subdir, converted_subdir, dry_run, embed):
 
                 # If embedding, embed the copied cover.jpg into every song in the album folder
                 if embed:
-                    for song in fnmatch.filter(os.listdir(converted_albums[index]), "*.mp3"):
-                        embed_cover(os.path.join(converted_albums[index], song), converted_cover_path)
+                    with open(converted_cover_path, "rb") as cover_file:
+                        # Load the cover
+                        cover = cover_file.read()
+
+                        for song in fnmatch.filter(os.listdir(converted_albums[index]), "*.mp3"):
+                            embed_cover(os.path.join(converted_albums[index], song), cover)
             else:
                 audit_result = False
     
-    exit(0 if audit_result else 1)
+    return 0 if audit_result else 1
 
-def embed_cover(song_path, cover_path):
+def embed_cover(song_path: str, cover: bytes) -> None:
     """
     Embeds a provided jpg file into a song's ID3 metadata
 
     Args:
         song_path: Path to the song to embed within
-        cover_path: Path to the covert to embed
+        cover: Bytes object containing song cover
     """
 
     # Mutagen MP3 object using the song path
@@ -81,33 +85,12 @@ def embed_cover(song_path, cover_path):
             mime="image/jpeg",
             type=3, # cover image
             desc=u'Cover',
-            data=open(cover_path, "rb").read()
+            data=cover
         )
     )
 
     # Save the song
     song.save()
-
-def string_to_boolean(string_value):
-    """
-    Convert a string argument to a boolean
-
-    Args:
-        string_value: String value to be converted
-    
-    Returns:
-        A boolean representation of the string value
-    
-    Raises:
-        argparse.ArgumentTypeError: If the string provided does not have a boolean equivalent
-    """
-
-    if string_value.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif string_value.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 if __name__ == "__main__":
     # Interactive command line arguments
@@ -115,8 +98,8 @@ if __name__ == "__main__":
     parser.add_argument("--dir", nargs="?", default="~/media/Music/FLAC", help="Location of the beets music library files")
     parser.add_argument("--librarydir", nargs="?", default="FLAC", help="Name of the subdir for the library folder")
     parser.add_argument("--converteddir", nargs="?", default="V2", help="Name of the subdir for the converted folder")
-    parser.add_argument("--dryrun", type=string_to_boolean, nargs="?", const=True, default="no", help="Dry run, don't modify artifacts")
-    parser.add_argument("--embed", type=string_to_boolean, nargs="?", const=True, default="no", help="Embed the cover in the songs")
+    parser.add_argument("--dryrun", type=beetutils.string_to_boolean, nargs="?", const=True, default="no", help="Dry run, don't modify artifacts")
+    parser.add_argument("--embed", type=beetutils.string_to_boolean, nargs="?", const=True, default="no", help="Embed the cover in the songs")
     args = parser.parse_args()
 
     exit(main(args.dir, args.librarydir, args.converteddir, args.dryrun, args.embed))
