@@ -1,5 +1,18 @@
 # Enabled plugins
-plugins: discogs beatport lyrics lastgenre copyartifacts inline zero convert fetchart
+plugins:
+  - discogs
+  - beatport
+  - lyrics
+  - lastgenre
+  - copyartifacts
+  - inline
+  - zero
+  - convert
+  - fetchart
+  # DJ plugins, comment if you set DISABLE_DJ_PLUGINS during install
+  - keyfinder
+  - bpmanalyser
+  - replaygain
 directory: ~/media/Music/FLAC           # Location where music is stored, in "./$artist/$artist - $album" format
 library: ~/.config/beets/library.db     # Location where the beets database is stored
 log: ~/.config/beets/importer.log       # Location where the import process will write it's logs
@@ -65,3 +78,16 @@ convert:
   never_convert_lossy_files: yes                        # Never convert lossy files, only lossless
   copy_album_art: no                                    # Don't copy over album art
   embed: no                                             # Don't embed album art
+# DJ plugins, comment if you set DISABLE_DJ_PLUGINS during install
+# Key detection
+keyfinder:
+  auto: no                                              # Don't do on import
+  bin: keyfinder-cli                                    # Use keyfinder-cli
+bpmanalyser:
+  auto: no                                              # Disable AUTO (not implemented)
+  write: yes                                            # Write BPM to file
+  quiet: no                                             # Write output
+  force: no                                             # Only do files without BPM
+replaygain:
+  backend: gstreamer
+  auto: no

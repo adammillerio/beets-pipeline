@@ -13,6 +13,14 @@ REQUESTS_VERSION=${REQUESTS_VERSION:-2.22.0}
 REQUESTS_OAUTHLIB_VERSION=${REQUESTS_OAUTHLIB_VERSION:-1.3.0}
 BEETS_COPYARTIFACTS_VERSION=${BEETS_COPYARTIFACTS_VERSION:-0.1.3}
 MUTAGEN_VERSION=${MUTAGEN_VERSION:-1.44.0}
+BEETS_BPMANALYSER_VERSION=${BEETS_BPMANALYSER_VERSION:-1.3.3}
+KEYFINDER_URL=${KEYFINDER_URL:-'https://github.com/mixxxdj/libKeyFinder'}
+KEYFINDER_VERSION=${KEYFINDER_VERSION:-v2.2.3}
+KEYFINDER_CLI_URL=${KEYFINDER_CLI_URL:-'https://github.com/EvanPurkhiser/keyfinder-cli.git'}
+KEYFINDER_CLI_VERSION=${KEYFINDER_CLI_VERSION:-master}
+# TODO: Debian 9 doesn't have libcairo 1.15, so update these after updating.
+PYCAIRO_VERSION=${PYCAIRO_VERSION:-1.19.1}
+PYGOBJECT_VERSION=${PYGOBJECT_VERSION:-3.30.5}
 
 PLATFORM=$(lsb_release -i -s)
 USE_VENV=${USE_VENV:-true}
@@ -31,6 +39,7 @@ CONVERTED_EXTENSION=${CONVERTED_EXTENSION:-mp3}
 INTERACTIVE=${INTERACTIVE:-true}
 BELL=${BELL:-\\a}
 USE_SUBSONIC=${USE_SUBSONIC:-false}
+DISABLE_DJ_TOOLS=${DISABLE_DJ_TOOLS:-false}
 
 activate_venv() {
 	echo 'Adding pyenv to PATH'
@@ -55,6 +64,12 @@ install() {
 	
 	echo 'Installing beets'
 	deploy_beets
+
+
+	if [ $DISABLE_DJ_TOOLS != 'true' ]; then
+		echo 'Installing keyfinder-cli'
+		deploy_keyfinder
+	fi
 }
 
 deploy_venv() {
@@ -64,6 +79,11 @@ deploy_venv() {
 		sudo apt-get install --no-install-recommends -y make build-essential libssl-dev zlib1g-dev libbz2-dev \
 		libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
 		xz-utils tk-dev libffi-dev
+
+		if [ $DISABLE_DJ_TOOLS != 'true' ]; then
+			sudo apt-get install --no-install-recommends -y gstreamer1.0 gstreamer1.0-plugins-good \
+			libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
+		fi
 	fi
 
 	echo 'Checking if pyenv is installed'
@@ -120,8 +140,64 @@ deploy_beets() {
 		beets-copyartifacts3==$BEETS_COPYARTIFACTS_VERSION \
 		mutagen==$MUTAGEN_VERSION
 
+	if [ $DISABLE_DJ_TOOLS != 'true' ]; then
+		echo 'Installing beets DJ plugins'
+		pip install \
+			beets-bpmanalyser==$BEETS_BPMANALYSER_VERSION \
+			pycairo==$PYCAIRO_VERSION \
+			PyGObject==$PYGOBJECT_VERSION
+	fi
+
 	echo 'Installing python-itunes'
 	pip install https://github.com/ocelma/python-itunes/archive/master.zip
+}
+
+deploy_keyfinder() {
+	echo 'Installing platform specific tools'
+	if [[ $PLATFORM == 'Debian' ]]; then
+		sudo apt-get install --no-install-recommends -y \
+			libswresample-dev libavformat-dev libavutil-dev libavcodec-dev \
+			qt5-default qtbase5-dev \
+			libfftw3-dev
+	fi
+
+	echo 'Cloning libKeyFinder source'
+	git clone --depth 1 --branch $KEYFINDER_VERSION $KEYFINDER_URL libKeyFinder
+
+	echo 'Building libKeyFinder'
+	pushd libKeyFinder
+	qmake
+	make
+
+	echo 'Installing libKeyFinder'
+	sudo make install
+
+	echo 'Removing libKeyFinder source'
+	popd
+	rm -rf libKeyFinder
+
+	echo 'Cloning keyfinder-cli source'
+	git clone --depth 1 --branch $KEYFINDER_CLI_VERSION $KEYFINDER_CLI_URL keyfinder-cli
+
+	echo 'Building keyfinder-cli'
+	pushd keyfinder-cli
+	make
+
+	echo 'Installing keyfinder-cli'
+	sudo make install
+
+	echo 'Removing keyfinder-cli source'
+	popd
+	rm -rf keyfinder-cli
+
+	# As of right now there is no release cut that includes the version of this
+	# plugin that supports keyfinder.py, so we just have to manually drop it into
+	# the package path.
+	echo '!!HACKY Replacing keyfinder.py with version from master'
+	PACKAGE_DIR=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
+	BEETSPLUG_DIR="$PACKAGE_DIR/beetsplug"
+	mv $BEETSPLUG_DIR/keyfinder.py $BEETSPLUG_DIR/keyfinder_orig.py
+	cp keyfinder.py $BEETSPLUG_DIR/keyfinder.py
 }
 
 import_library() {
@@ -358,6 +434,37 @@ convert_library() {
 	fi
 }
 
+dj_library() {
+	key_library
+	bpm_library
+}
+
+key_library() {
+	echo "Performing key analysis for new files in $LIBRARY_DIR"
+	$BEETS_BIN keyfinder "added:-1d.." > ./keyfinder.log 2>&1
+
+	RESULT=$?
+
+	if [[ $INTERACTIVE == 'false' ]]; then
+		exit $RESULT
+	else
+		return $RESULT
+	fi
+}
+
+bpm_library() {
+	echo "Performing BPM analysis for new files in $LIBRARY_DIR"
+	$BEETS_BIN bpmanalyser "added:-1d.." > ./bpmanalyser.log 2>&1
+
+	RESULT=$?
+
+	if [[ $INTERACTIVE == 'false' ]]; then
+		exit $RESULT
+	else
+		return $RESULT
+	fi
+}
+
 audit_converted() {
 	echo -e "Auditing missing converted\n"
 	audit_converted_music
@@ -475,6 +582,11 @@ full() {
 	audit_library
 	fix_library
 	convert_library
+
+	if [ $DISABLE_DJ_TOOLS != 'true' ]; then
+		dj_library
+	fi
+
 	audit_converted
 	fix_converted
 	cleanup_import

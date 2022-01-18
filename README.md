@@ -27,6 +27,12 @@ In addition, the following packages should be installed via pip:
 * mutagen
 * python-itunes (`pip install https://github.com/ocelma/python-itunes/archive/master.zip`)
 
+If "DJ Tools" are enabled, the following are also installed:
+
+* beets-bpmanalyser (BPM analysis plugin)
+* libKeyFinder (Key analysis tool)
+* keyfinder-cli (CLI for libKeyFinder)
+
 # Configuration
 
 All configuration variables are provided below in the `beets.sh` section. It is recommended that these configuration options be stored in a `.env` file located in the root of the directory that `beets.sh` is running out of. This file will be parsed in, and values will override any defaults in the script.
@@ -129,6 +135,7 @@ Copies any missing `cover.jpg` files over to the converted directory, and option
 | CONVERTED_EXTENSION | mp3 | Extension of the converted song files |
 | INTERACTIVE | true | Whether or not script is being ran interactively, if set to false, it will never pause for user input |
 | BELL | \\a | Send a bell char to alert when input is needed, set this to blank to disable |
+| DISABLE_DJ_TOOLS | false | Set to true to disable the installation of BPM and key analysis tools and workflows for DJs |
 
 ### Subsonic Configuration
 
@@ -143,6 +150,10 @@ Optionally, if using Subonic, the following values can be supplied to trigger a 
 | SUBSONIC_CLIENT | beets-pipeline | Client string to provide to Subsonic |
 | SUBSONIC_VERSION | 1.15.0 | API version to use |
 | SUBSONIC_FORMAT | json | Format of the API response |
+
+### DJ Tools
+
+By default this pipeline enables key and BPM analysis workflows, which are useful for DJ tools. If you don't want this. Then set the `DISABLE_DJ_TOOLS` environment variable to true.
 
 ### Version Configuration
 
@@ -159,6 +170,9 @@ These variables are used to configure the versions of software that are installe
 | REQUESTS_OAUTHLIB_VERSION | 1.3.0 | Python Requests OAuth module |
 | BEETS_COPYARTIFACTS_VERSION | 0.1.3 | Beets CopyArtifacts plugin |
 | MUTAGEN_VERSION | 1.44.0 | Mutagen music metadata editor module |
+| BEETS_BPMANALYSER_VERSION | 1.3.3 | Beets BPM analysis plugin |
+| KEYFINDER_VERSION | v2.2.3 | Key analysis library |
+| KEYFINDER_CLI_VERSION | master | Key analysis CLI |
 
 Currently, the script provides the following "steps":
 
@@ -179,6 +193,9 @@ Currently, the script provides the following "steps":
 | fix_jpg_artifacts | Checks for jpg artifacts other than `cover.jpg` and moves them if necessary |
 | fix_dir_artifacts | Checks for dir artifacts and deletes them if necessary |
 | convert_library | Converts all music in the beets database, storing output in ./convert.log |
+| dj_library | Run DJ workflows (bpm_library and key_library) |
+| key_library | Computes and sets the key for all songs added in the last day |
+| bpm_library | Computes and sets the bpm for all songs added in the last day |
 | audit_converted | Runs audit_converted_music |
 | audit_converted_music | Checks for music in the beets database not present in the converted folder |
 | fix_converted | Runs fix_converted_covers |
