@@ -5,22 +5,24 @@ if [ -e .env ]; then
 fi
 
 PYTHON_VERSION=${PYTHON_VERSION:-3.8.1}
-BEETS_VERSION=${BEETS_VERSION:-1.4.9}
-PYLAST_VERSION=${PYLAST_VERSION:-3.2.0}
-BS4_VERSION=${BS4_VERSION:-4.8.2}
-DISCOGS_CLIENT_VERSION=${DISCOGS_CLIENT_VERSION:-2.2.2}
-REQUESTS_VERSION=${REQUESTS_VERSION:-2.22.0}
+BEETS_VERSION=${BEETS_VERSION:-1.6.0}
+PYLAST_VERSION=${PYLAST_VERSION:-4.4.0}
+BS4_VERSION=${BS4_VERSION:-4.10.0}
+DISCOGS_CLIENT_VERSION=${DISCOGS_CLIENT_VERSION:-2.3.0}
+REQUESTS_VERSION=${REQUESTS_VERSION:-2.27.1}
 REQUESTS_OAUTHLIB_VERSION=${REQUESTS_OAUTHLIB_VERSION:-1.3.0}
 BEETS_COPYARTIFACTS_VERSION=${BEETS_COPYARTIFACTS_VERSION:-0.1.3}
-MUTAGEN_VERSION=${MUTAGEN_VERSION:-1.44.0}
+MUTAGEN_VERSION=${MUTAGEN_VERSION:-1.45.1}
 BEETS_BPMANALYSER_VERSION=${BEETS_BPMANALYSER_VERSION:-1.3.3}
 KEYFINDER_URL=${KEYFINDER_URL:-'https://github.com/mixxxdj/libKeyFinder'}
-KEYFINDER_VERSION=${KEYFINDER_VERSION:-v2.2.3}
+KEYFINDER_VERSION=${KEYFINDER_VERSION:-v2.2.6}
+KEYFINDER_LIBRARY_PATH=${KEYFINDER_LIBRARY_PATH:-/usr}
 KEYFINDER_CLI_URL=${KEYFINDER_CLI_URL:-'https://github.com/EvanPurkhiser/keyfinder-cli.git'}
 KEYFINDER_CLI_VERSION=${KEYFINDER_CLI_VERSION:-master}
 # TODO: Debian 9 doesn't have libcairo 1.15, so update these after updating.
 PYCAIRO_VERSION=${PYCAIRO_VERSION:-1.19.1}
 PYGOBJECT_VERSION=${PYGOBJECT_VERSION:-3.30.5}
+CYTHON_VERSION=${CYTHON_VERSION:-0.29.26}
 
 PLATFORM=$(lsb_release -i -s)
 USE_VENV=${USE_VENV:-true}
@@ -115,6 +117,8 @@ deploy_venv() {
 	fi
 
 	echo 'virtualenv created'
+
+	activate_venv
 }
 
 destroy_venv() {
@@ -130,6 +134,7 @@ deploy_beets() {
 	fi
 
 	echo 'Installing beets and plugins'
+	pip install cython==$CYTHON_VERSION
 	pip install \
 		beets==$BEETS_VERSION \
 		pylast==$PYLAST_VERSION \
@@ -166,8 +171,8 @@ deploy_keyfinder() {
 
 	echo 'Building libKeyFinder'
 	pushd libKeyFinder
-	qmake
-	make
+	cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=$KEYFINDER_LIBRARY_PATH -S . -B 
+	cmake --build .
 
 	echo 'Installing libKeyFinder'
 	sudo make install
@@ -189,15 +194,6 @@ deploy_keyfinder() {
 	echo 'Removing keyfinder-cli source'
 	popd
 	rm -rf keyfinder-cli
-
-	# As of right now there is no release cut that includes the version of this
-	# plugin that supports keyfinder.py, so we just have to manually drop it into
-	# the package path.
-	echo '!!HACKY Replacing keyfinder.py with version from master'
-	PACKAGE_DIR=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
-	BEETSPLUG_DIR="$PACKAGE_DIR/beetsplug"
-	mv $BEETSPLUG_DIR/keyfinder.py $BEETSPLUG_DIR/keyfinder_orig.py
-	cp keyfinder.py $BEETSPLUG_DIR/keyfinder.py
 }
 
 import_library() {
