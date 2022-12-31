@@ -2,3 +2,5 @@
 *.log
 *.pyc
 __pycache__
+bpmanalyser_errors.txt
+keyfinder_errors.txt
