@@ -4,7 +4,7 @@
 import os,fnmatch,sqlite3
 from sys import version_info
 from argparse import ArgumentTypeError
-from typing import List
+from typing import List, Iterable, Optional
 
 def get_library_albums(library_dir: str) -> List[str]:
     """
@@ -55,13 +55,12 @@ def get_folder_artifacts(folder: str, artifact_extension: str) -> List[str]:
 
     return artifacts
 
-def get_beets_songs(db: str, extension: str = "flac") -> List[str]:
+def get_beets_songs(db: str) -> List[str]:
     """
     Retrieve all paths to songs in a beets database
 
     Args:
         db: Path to the SQLite beets database
-        extension: File extension of paths to return, if comparing converted files
     
     Returns:
         An array of all full song paths in a beets database
@@ -75,30 +74,32 @@ def get_beets_songs(db: str, extension: str = "flac") -> List[str]:
         else:
             beets_songs = [str(row[0]) for row in conn.execute("SELECT path FROM items")]
         
-        return [os.path.splitext(beets_song)[0] + ".%s" % extension for beets_song in beets_songs]
+        return beets_songs
     finally:
         conn.close()
 
-def get_library_songs(library_dir: str, extension: str = "flac") -> List[str]:
+def get_library_songs(library_dir: str, extensions: Optional[Iterable[str]] = None) -> List[str]:
     """
     Retrieve all paths to songs in a music library
 
     Args:
         library_dir: Path to the library which contains the artist folders
-        extension: Extension of song files, defaults to flac
+        extension: Extensions of song files, defaults to flac and mp3.
     
     Returns:
         An array of all full song paths in a music library
     """
 
-    pattern = "*.%s" % extension
+    extensions = extensions if extensions is not None else (".flac", ".mp3")
+
     library_songs = []
 
     # Walk through each the entire directory structure of the library
     for root, dirs, files in os.walk(library_dir):
-        # Append any .flac files found
-        for filename in fnmatch.filter(files, pattern):
-            library_songs.append(os.path.join(root, filename))
+        # Append any files that match the expected extensions.
+        for filename in files:
+            if filename.endswith(extensions):
+                library_songs.append(os.path.join(root, filename))
     
     return library_songs
 
