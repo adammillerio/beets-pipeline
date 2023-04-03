@@ -4,7 +4,7 @@ if [ -e .env ]; then
 	export $(xargs < .env)
 fi
 
-PYTHON_VERSION=${PYTHON_VERSION:-3.8.1}
+PYTHON_VERSION=${PYTHON_VERSION:-3.8.16}
 BEETS_VERSION=${BEETS_VERSION:-1.6.0}
 PYLAST_VERSION=${PYLAST_VERSION:-4.4.0}
 BS4_VERSION=${BS4_VERSION:-4.10.0}
@@ -15,10 +15,10 @@ BEETS_COPYARTIFACTS_VERSION=${BEETS_COPYARTIFACTS_VERSION:-0.1.5}
 MUTAGEN_VERSION=${MUTAGEN_VERSION:-1.45.1}
 BEETS_BPMANALYSER_VERSION=${BEETS_BPMANALYSER_VERSION:-1.3.3}
 KEYFINDER_URL=${KEYFINDER_URL:-'https://github.com/mixxxdj/libKeyFinder'}
-KEYFINDER_VERSION=${KEYFINDER_VERSION:-v2.2.6}
+KEYFINDER_VERSION=${KEYFINDER_VERSION:-2.2.7}
 KEYFINDER_LIBRARY_PATH=${KEYFINDER_LIBRARY_PATH:-/usr}
 KEYFINDER_CLI_URL=${KEYFINDER_CLI_URL:-'https://github.com/EvanPurkhiser/keyfinder-cli.git'}
-KEYFINDER_CLI_VERSION=${KEYFINDER_CLI_VERSION:-master}
+KEYFINDER_CLI_VERSION=${KEYFINDER_CLI_VERSION:-main}
 # TODO: Debian 9 doesn't have libcairo 1.15, so update these after updating.
 PYCAIRO_VERSION=${PYCAIRO_VERSION:-1.19.1}
 PYGOBJECT_VERSION=${PYGOBJECT_VERSION:-3.30.5}
@@ -83,8 +83,10 @@ deploy_venv() {
 		xz-utils tk-dev libffi-dev
 
 		if [ $DISABLE_DJ_TOOLS != 'true' ]; then
-			sudo apt-get install --no-install-recommends -y gstreamer1.0 gstreamer1.0-plugins-good \
-			libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
+			sudo apt-get install --no-install-recommends -y libgstreamer-plugins-base1.0-dev \
+			gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+			gstreamer1.0-plugins-ugly libgirepository1.0-dev gcc libcairo2-dev pkg-config \
+			python3-dev gir1.2-gtk-3.0 aubio-tools libaubio-dev libaubio-doc
 		fi
 	fi
 
@@ -162,7 +164,7 @@ deploy_keyfinder() {
 	if [[ $PLATFORM == 'Debian' ]]; then
 		sudo apt-get install --no-install-recommends -y \
 			libswresample-dev libavformat-dev libavutil-dev libavcodec-dev \
-			qt5-default qtbase5-dev \
+			qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools \
 			libfftw3-dev
 	fi
 
@@ -171,7 +173,7 @@ deploy_keyfinder() {
 
 	echo 'Building libKeyFinder'
 	pushd libKeyFinder
-	cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=$KEYFINDER_LIBRARY_PATH -S . -B 
+	cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=$KEYFINDER_LIBRARY_PATH -S . -B .
 	cmake --build .
 
 	echo 'Installing libKeyFinder'
